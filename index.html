@@ -37,8 +37,9 @@
   <select id="outputFormat">
     <option value="image/png">PNG</option>
     <option value="image/jpeg">JPEG</option>
-    <!-- Add more format options as needed -->
   </select>
+  <label for="upscale">Upscale</label>
+  <input type="checkbox" id="upscale">
   <button onclick="convertImage()">Convert</button>
   <a id="downloadLink" style="display: none;" download="converted_image">Download Converted Image</a>
   <img id="outputImage" />
@@ -49,6 +50,7 @@
       const outputFormat = document.getElementById('outputFormat').value;
       const outputImage = document.getElementById('outputImage');
       const downloadLink = document.getElementById('downloadLink');
+      const upscaleCheckbox = document.getElementById('upscale');
 
       if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -60,14 +62,20 @@
           img.onload = function () {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
-
+            
+            if (upscaleCheckbox.checked) {
+              canvas.width = img.width * 2;
+              canvas.height = img.height * 2;
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            } else {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.drawImage(img, 0, 0, img.width, img.height);
+            }
             const dataURL = canvas.toDataURL(outputFormat);
             outputImage.src = dataURL;
 
-            // Show download link
+            
             downloadLink.href = dataURL;
             downloadLink.style.display = 'block';
           };
