@@ -1,5 +1,5 @@
 ```markdown
-# Image Format Converter
+# Image Customizer
 
 This JavaScript code allows users to convert image formats easily using a web interface. Users can upload an image, choose the desired output format, and convert the image accordingly.
 
