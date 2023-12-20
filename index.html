@@ -14,19 +14,30 @@
       margin-bottom: 10px;
     }
 
-    button {
+    button, #deleteButton {
       background-color: #4CAF50;
       color: white;
       padding: 10px 20px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      margin: 5px;
     }
 
     img {
       border-radius: 10px;
       margin-top: 20px;
       max-width: 100%;
+    }
+
+    #imageContainer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    #imageContainer img {
+      width: 45%;
     }
   </style>
   <title>Image Format Converter</title>
@@ -45,19 +56,28 @@
   <input type="number" id="height" placeholder="Leave blank for original height">
   <label for="upscale">Upscale</label>
   <input type="checkbox" id="upscale">
+  <label for="crop">Crop</label>
+  <input type="checkbox" id="crop">
   <button onclick="convertImage()">Convert</button>
+  <button id="deleteButton" onclick="deleteImage()">Delete Image</button>
   <a id="downloadLink" style="display: none;" download="converted_image">Download Converted Image</a>
-  <img id="outputImage" />
+
+  <div id="imageContainer">
+    <img id="originalImage" style="display: none;" />
+    <img id="outputImage" style="display: none;" />
+  </div>
 
   <script>
     function convertImage() {
       const input = document.getElementById('imageInput');
       const outputFormat = document.getElementById('outputFormat').value;
       const outputImage = document.getElementById('outputImage');
+      const originalImage = document.getElementById('originalImage');
       const downloadLink = document.getElementById('downloadLink');
       const widthInput = document.getElementById('width');
       const heightInput = document.getElementById('height');
       const upscaleCheckbox = document.getElementById('upscale');
+      const cropCheckbox = document.getElementById('crop');
 
       if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -74,28 +94,56 @@
             const newWidth = widthInput.value ? parseInt(widthInput.value) : img.width;
             const newHeight = heightInput.value ? parseInt(heightInput.value) : img.height;
 
-            // Upscale if the checkbox is checked
-            if (upscaleCheckbox.checked) {
-              canvas.width = newWidth * 2;
-              canvas.height = newHeight * 2;
+            // Adjust dimensions for crop mode
+            if (cropCheckbox.checked) {
+              const aspectRatio = newWidth / newHeight;
+              const originalAspectRatio = img.width / img.height;
+
+              if (aspectRatio < originalAspectRatio) {
+                canvas.width = newWidth;
+                canvas.height = newWidth / originalAspectRatio;
+              } else {
+                canvas.width = newHeight * originalAspectRatio;
+                canvas.height = newHeight;
+              }
             } else {
               canvas.width = newWidth;
               canvas.height = newHeight;
             }
 
-            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            const dataURL = canvas.toDataURL(outputFormat);
-            outputImage.src = dataURL;
+            // Upscale if the checkbox is checked
+            if (upscaleCheckbox.checked) {
+              const scaledCanvas = document.createElement('canvas');
+              const scaledCtx = scaledCanvas.getContext('2d');
+              scaledCanvas.width = canvas.width * 2;
+              scaledCanvas.height = canvas.height * 2;
+              scaledCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, scaledCanvas.width, scaledCanvas.height);
+              originalImage.src = img.src;
+              originalImage.style.display = 'inline-block';
+              outputImage.src = scaledCanvas.toDataURL(outputFormat);
+            } else {
+              originalImage.style.display = 'none';
+              outputImage.src = canvas.toDataURL(outputFormat);
+            }
 
             // Show download link
-            downloadLink.href = dataURL;
+            downloadLink.href = outputImage.src;
             downloadLink.style.display = 'block';
+            outputImage.style.display = 'inline-block';
           };
         };
 
         reader.readAsDataURL(input.files[0]);
       }
+    }
+
+    function deleteImage() {
+      document.getElementById('imageInput').value = '';
+      document.getElementById('outputImage').style.display = 'none';
+      document.getElementById('originalImage').style.display = 'none';
+      document.getElementById('downloadLink').style.display = 'none';
     }
   </script>
 </body>
