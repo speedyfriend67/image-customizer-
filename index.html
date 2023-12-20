@@ -1,0 +1,38 @@
+// HTML
+<input type="file" id="imageInput" />
+<select id="outputFormat">
+  <option value="image/png">PNG</option>
+  <option value="image/jpeg">JPEG</option>
+  <!-- Add more format options as needed -->
+</select>
+<button onclick="convertImage()">Convert</button>
+<img id="outputImage" />
+
+// JavaScript
+function convertImage() {
+  const input = document.getElementById('imageInput');
+  const outputFormat = document.getElementById('outputFormat').value;
+  const outputImage = document.getElementById('outputImage');
+
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const img = new Image();
+      img.src = e.target.result;
+
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+        const dataURL = canvas.toDataURL(outputFormat);
+        outputImage.src = dataURL;
+      };
+    };
+
+    reader.readAsDataURL(input.files[0]);
+  }
+}
